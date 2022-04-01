@@ -368,19 +368,26 @@ use "./data/rawdata/rationing_worker_raw.dta", clear
 	gen treat_peak = treat*peak
 	gen treat_peakc = treat*peakc
 
-	gen treat_nonsignup = treat*sample_nonsignup
+	/* gen treat_nonsignup = treat*sample_nonsignup
 	gen treat_nonsignup_peak = treat_peak*sample_nonsignup
 	gen peak_nonsignup = peak * sample_nonsignup
 
 	gen peak_landpermem_m0 = peak*landpermem_m0
 	gen treat_peak_landpermem_m0 = treat_peak*landpermem_m0
-	gen treat_landpermem_m0 = treat*landpermem_m0
+	gen treat_landpermem_m0 = treat*landpermem_m0 */
 
 	sum land_per_hh_mem_m if surv_el==1 & sample_spillover==1 & avg_eselfagri_ctrl>0 & land_per_hh_mem_m>0, d
 	gen landpermem_above = (land_per_hh_mem_m>r(p50))
-	gen treat_landpermem_above = treat*landpermem_above
+	/* gen treat_landpermem_above = treat*landpermem_above
 	gen peak_landpermem_above = peak*landpermem_above
-	gen treat_peak_landpermem_above = treat_peak*landpermem_above
+	gen treat_peak_landpermem_above = treat_peak*landpermem_above */
+
+	foreach var in sample_nonsignup landpermem_m0 landpermem_above {
+		foreach inter in peak treat treat_peak {
+			gen `inter'_`var' = `inter'*`var' 
+		}
+	}
+
 
 ** Drop incomplete surveys 
 	drop if survey_not_complete!=0
@@ -389,17 +396,31 @@ use "./data/rawdata/rationing_worker_raw.dta", clear
 	sum rating_mean if surv_el==1 & sample_spillover==1 & grid_id ==1 & peak ==0, d 
 	gen rating_std = (rating_mean - r(mean))/r(sd)
 	gen rating_std_miss = rating_std ==. 
+
+	foreach var in bl_dwagetot bl_e_manwage {
+		sum `var' if surv_el==1 & sample_spillover==1 & grid_id ==1 & peak ==0, d
+		gen `var'_std = (`var' - r(mean))/r(sd)
+		gen `var'_std_miss = `var'_std ==. 
+	}
+
 		
-	sum bl_dwagetot if surv_el==1 & sample_spillover==1 & grid_id ==1 & peak ==0, d
+	/* sum bl_dwagetot if surv_el==1 & sample_spillover==1 & grid_id ==1 & peak ==0, d
 	gen bl_dwagetot_std = (bl_dwagetot - r(mean))/r(sd)
 	gen bl_dwagetot_std_miss = bl_dwagetot_std ==. 
 	
 	sum bl_e_manwage if surv_el==1 & sample_spillover==1 & grid_id ==1 & peak ==0, d
 	gen bl_e_manwage_std = (bl_e_manwage - r(mean))/r(sd)
-	gen bl_e_manwage_std_miss = bl_e_manwage_std ==. 
+	gen bl_e_manwage_std_miss = bl_e_manwage_std ==.  */
 	
 	* generate interaction terms 
-	gen peak_rating_std = peak*rating_std 
+	foreach var in rating_std bl_dwagetot_std bl_e_manwage_std ///
+		rating_std_miss bl_dwagetot_std_miss bl_e_manwage_std_miss {
+		foreach inter in peak treat treat_peak {
+			gen `inter'_`var' = `inter'*`var' 
+		}
+	}
+
+/* 	gen peak_rating_std = peak*rating_std 
 	gen treat_rating_std = treat*rating_std
 	gen treat_peak_rating_std = treat_peak*rating_std	
 	gen peak_rating_std_miss = peak*rating_std_miss
@@ -418,7 +439,8 @@ use "./data/rawdata/rationing_worker_raw.dta", clear
 	gen peak_bl_e_manwage_std = bl_e_manwage_std*peak
 	gen treat_bl_e_manwage_std_miss = bl_e_manwage_std_miss*treat
 	gen peak_bl_e_manwage_std_miss = bl_e_manwage_std_miss*peak
-	gen treatpeak_bl_emanwagestd_miss = bl_e_manwage_std_miss*treat_peak
+	gen treatpeak_bl_emanwagestd_miss = bl_e_manwage_std_miss*treat_peak */
+	
 	
 ** Drop variables that are not required in analysis 
 	drop parti_lm wage_type wage_cash wage_inkind accept_dailywageoffer days_would_like_work land_share_acres land_share_guntas own_land_acres own_land_guntas work_status activity_code h_agri_hire7 tot_hr_wrk_hh tot_hr_wrk_mm hiring_past30 hiring_activity_code hiring_days hiring_wage_m hiring_wage_f acretoguntaconv lcount noland ownland h_agri h_agri_any h_agri_hire cashamt inkamt sharecropland totalland totalland_miss e_selfagri_hh_tot e_self_hh_tot tot_signedup tot_recruited e_manlab dailywagecash dailywageink hourlywagetot dailywagecash_w avg_emanwage_ctrl bl_owntotalland survey_not_complete bl_totalland bl_totalland_miss bl_totalland_nm hhcount e_selfagri_tot e_any e_wage occup_anyfarm lab_peracre
