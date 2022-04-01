@@ -4,9 +4,11 @@
 use "./data/rawdata/NREGA_preperiod_data", clear
 	
 * Collapse data to individual level 
-	collapse (max) hiredemp mult month month_bin nonag_self usualag usualcas (sum) casual_days unempl_days self_days (mean) lpc caswage_w_pre, by(round statename districtname hid indiv)
+	collapse (max) hiredemp mult month month_bin nonag_self usualag usualcas (sum) casual_days unempl_days self_days (mean) lpc caswage_w_pre, ///
+		by(round statename districtname hid indiv)
 
 * Collapse data to round-district-month level
+	//weight by multiplier
 	gen casual_days_Mult = casual_days*mult
 	gen unempl_days_Mult = unempl_days*mult
 	gen self_days_Mult = self_days*mult
@@ -20,8 +22,11 @@ use "./data/rawdata/NREGA_preperiod_data", clear
 
 save "./data/cleandata/rationing_nrega_worker.dta", replace
 	
-	collapse (sum) usualag_Mult usualcas_Mult nonag_days_Mult casual_days_Mult unempl_days_Mult self_days_Mult nonag_self_days_Mult mult numind caswage_Mult mult_wage, by(round statename districtname month month_bin)
+	collapse (sum) usualag_Mult usualcas_Mult nonag_days_Mult casual_days_Mult unempl_days_Mult ///
+		self_days_Mult nonag_self_days_Mult mult numind caswage_Mult mult_wage, ///
+		by(round statename districtname month month_bin)
 
+	//generate unweighted vars again
 	gen casual_days = casual_days_Mult/mult
 	gen unempl_days = unempl_days_Mult/mult
 	gen self_days = self_days_Mult/mult
@@ -73,20 +78,25 @@ save "./data/cleandata/rationing_nrega_worker.dta", replace
 * Merge in the heterogeneity data sets into main data 	
 	use "./data/rawdata/NREGA_panel.dta", clear
 
-	merge m:1 statename districtname using "./data/cleandata/NREGA_pre_frac_ag.dta"
-	drop if _merge==2
+	merge m:1 statename districtname using "./data/cleandata/NREGA_pre_frac_ag.dta", assert(2 3) keep(3) nogen
+	/* drop if _merge==2
 	assert _merge==3 
-	drop _merge
+	drop _merge */
 
-	merge m:1 statename districtname month using "./data/cleandata/NREGA_pre_month_casual_labor.dta"
-	drop if _merge==2
+	merge m:1 statename districtname month using "./data/cleandata/NREGA_pre_month_casual_labor.dta", ///
+		assert(1 2 3) keep(1 3)
+	/* drop if _merge==2 */
 	gen no_monthpre_match = (_merge==1)
 	drop _merge
 
-	replace high_cdays_pre=0 if no_monthpre_match==1
+	//zero pre-period days in NREGA if you don't match 
+	foreach var of varlist high_cdays_pre casual_days_month_pre nonag_days_month_pre self_days_month_pre {
+		replace `var'=0 if no_monthpre_match==1
+	}
+	/* replace high_cdays_pre=0 if no_monthpre_match==1
 	replace casual_days_month_pre=0 if no_monthpre_match==1
 	replace nonag_days_month_pre=0 if no_monthpre_match==1
-	replace self_days_month_pre=0 if no_monthpre_match==1
+	replace self_days_month_pre=0 if no_monthpre_match==1 */
 
 * Generate interaction terms 
 	label var NREGA "Program"
@@ -100,7 +110,11 @@ save "./data/cleandata/rationing_nrega_worker.dta", replace
 	label var NREGA_chigh "Program x cas high"
 		
 * Generate variables
-	gen female_p = female*(round==64)
+	foreach var of varlist female EducCat1 EducCat2 EducCat3 EducCat4 EducCat5 ///
+		EducCat6 Age31to40 Age41to50 Age51to60 {
+			gen `var'_p = `var'*(round==64)
+		}
+	/* gen female_p = female*(round==64)
 	gen EducCat1_p = EducCat1*(round==64)
 	gen EducCat2_p = EducCat2*(round==64)
 	gen EducCat3_p = EducCat3*(round==64)
@@ -109,7 +123,7 @@ save "./data/cleandata/rationing_nrega_worker.dta", replace
 	gen EducCat6_p = EducCat6*(round==64)
 	gen Age31to40_p = Age31to40*(round==64)
 	gen Age41to50_p = Age41to50*(round==64)
-	gen Age51to60_p = Age51to60*(round==64)
+	gen Age51to60_p = Age51to60*(round==64) */
 
 	gen self_days_all = self_days + domduties_days
 
