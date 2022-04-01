@@ -13,11 +13,11 @@ set more off
 
 * Set directory for data and code 
 	* This must be modified by the user 
-	global dir <<insert directory here>>
+	global dir "/Users/isabelbailey/Dropbox/PhD/econ270B/laborRationingReplication/BPLaborRationingReplication"
 	cd "$dir"
 
 * Set directory for output  
-	global dir_output <<insert directory here>>
+	global dir_output "$dir/output"
 
 * Step 1: Install packages 
  	do "./code/install_packages.do"
