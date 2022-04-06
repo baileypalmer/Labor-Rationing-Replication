@@ -365,7 +365,30 @@
 	estadd local sample_l2 "Employers", replace 
 	estadd local levelobs "employer-activity", replace 
 
-	esttab, se(3) replace nostar keep(treat* sample_nonsignup peak_nonsignup) order(treat treat_peak treat_peakc treat_nonsignup treat_nonsignup_peak peak_nonsignup sample_nonsignup) stats(sample_l1 sample_l2 bl_mean pval lincom_se pval2 pval3 pval4 y_mean_lean y_mean_peak N levelobs, labels("Sample" " " "Baseline controls" "Pval: Shock + Shock*Semi-peak" "SE: Shock + Shock*Semi-peak" "Pval: Shock + Shock* Non Sign-Ups (NSU)" "Pval: Shock + Shock*Semi-peak +  Shock*NSU  + Shock*Semi-peak*NSU" "Pval: Shock*NSU + Shock*Semi-peak*NSU" "Control mean: lean" "Control mean: semi-peak"  "N" "Level of observations")) l nonotes 
+	//Original code in replication package:
+	//esttab, se(3) replace nostar keep(treat* sample_nonsignup peak_nonsignup) order(treat treat_peak treat_peakc treat_nonsignup treat_nonsignup_peak peak_nonsignup sample_nonsignup) stats(sample_l1 sample_l2 bl_mean pval lincom_se pval2 pval3 pval4 y_mean_lean y_mean_peak N levelobs, labels("Sample" " " "Baseline controls" "Pval: Shock + Shock*Semi-peak" "SE: Shock + Shock*Semi-peak" "Pval: Shock + Shock* Non Sign-Ups (NSU)" "Pval: Shock + Shock*Semi-peak +  Shock*NSU  + Shock*Semi-peak*NSU" "Pval: Shock*NSU + Shock*Semi-peak*NSU" "Control mean: lean" "Control mean: semi-peak"  "N" "Level of observations")) l nonotes 
+	//import Worker data file so variable labels are available when we export the table 
+	use "./data/cleandata/rationing_worker.dta", clear
+	//Use this table for original pvalue labelling ; creates a very wide table
+	esttab using "$dir_output/table3.tex", tex se(3) replace nostar ///
+		keep(treat* sample_nonsignup peak_nonsignup) ///
+		order(treat treat_peak treat_peakc treat_nonsignup treat_nonsignup_peak peak_nonsignup sample_nonsignup) ///
+		stats(sample_l1 sample_l2 bl_mean pval lincom_se pval2 pval3 pval4 y_mean_lean y_mean_peak N levelobs, ///
+		labels("Sample" " " "Baseline controls" "Pval: Shock + Shock*Semi-peak" ///
+			"SE: Shock + Shock*Semi-peak" "Pval: Shock + Shock* Non Sign-Ups (NSU)" ///
+			"Pval: Shock + Shock*Semi-peak +  Shock*NSU  + Shock*Semi-peak*NSU" ///
+			"Pval: Shock*NSU + Shock*Semi-peak*NSU" "Control mean: lean" "Control mean: semi-peak"  ///
+			"N" "Level of observations")) l nonotes
+	//Use this table for pvalue labelling using rows instead; creates a narrower table
+	/* esttab using "$dir_output/table3.tex", tex se(3) replace nostar ///
+		keep(treat* sample_nonsignup peak_nonsignup) ///
+		order(treat treat_peak treat_peakc treat_nonsignup treat_nonsignup_peak peak_nonsignup sample_nonsignup) ///
+		stats(sample_l1 sample_l2 bl_mean pval lincom_se pval2 pval3 pval4 y_mean_lean y_mean_peak N levelobs, ///
+		labels("Sample" " " "Baseline controls" "Pval: Row 1+ row2" ///
+			"SE: Row 1+ row2" "Pval: Row 1 + Row 4" ///
+			"Pval: Row 1 + Row 2 +  Row 4  + Row 5" ///
+			"Pval: Row 4 + Row 5" "Control mean: lean" "Control mean: semi-peak"  ///
+			"N" "Level of observations")) l nonotes  */
 
 * Table 4. Alternate Measures of Wages and Wage Contract
 	use "./data/cleandata/rationing_worker.dta", clear
